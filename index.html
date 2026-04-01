@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMILES Gas Prediction</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #e5e7eb;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 60px auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0b3c5d;
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        input {
+            padding: 14px;
+            width: 60%;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        }
+
+        button {
+            padding: 14px 22px;
+            border-radius: 12px;
+            border: none;
+            background: #0b3c5d;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .card {
+            margin-top: 50px;
+            padding: 35px;
+            border-radius: 25px;
+            background: #f9fafb;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            text-align: left;
+        }
+
+        /* Brown Results heading */
+        .card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #8b5e3c;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .box {
+            padding: 22px;
+            border-radius: 16px;
+            background: white;
+            transition: 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .box:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        /* Bigger + bold labels */
+        .label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .value {
+            font-size: 20px;   /* reduced from 28px */
+            font-weight: 500;  /* medium instead of bold */
+            margin-top: 6px;
+            color: #111827;
+}
+
+        sub {
+            font-size: 0.7em;
+            position: relative;
+            bottom: -0.3em;
+        }
+
+        .co2 { border-left: 6px solid #16a34a; }
+        .o2  { border-left: 6px solid #0284c7; }
+        .n2  { border-left: 6px solid #f59e0b; }
+        .ratio { border-left: 6px solid #ef4444; }
+
+        .error {
+            margin-top: 20px;
+            color: red;
+            font-weight: 500;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🔬 SMILES-based Gas Permeability Prediction</h1>
+
+    <form action="/predict" method="post">
+        <input type="text" name="smiles" placeholder="Enter SMILES..." required>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if results %}
+        <div class="card">
+            <h3>Results for {{ smiles }}</h3>
+
+            <div class="grid">
+
+                <div class="box co2">
+                    <div class="label">🧪 Permeability of CO<sub>2</sub> (Barrer)</div>
+                    <div class="value">{{ results.CO2 }}</div>
+                </div>
+
+                <div class="box o2">
+                    <div class="label">💨 Permeability of O<sub>2</sub> (Barrer)</div>
+                    <div class="value">{{ results.O2 }}</div>
+                </div>
+
+                <div class="box n2">
+                    <div class="label">🧫 Permeability of N<sub>2</sub> (Barrer)</div>
+                    <div class="value">{{ results.N2 }}</div>
+                </div>
+
+                <div class="box ratio">
+                    <div class="label">📊 CO<sub>2</sub> / O<sub>2</sub></div>
+                    <div class="value">{{ results.CO2_O2 }}</div>
+                </div>
+
+                <div class="box ratio">
+                    <div class="label">📈 CO<sub>2</sub> / N<sub>2</sub></div>
+                    <div class="value">{{ results.CO2_N2 }}</div>
+                </div>
+
+            </div>
+        </div>
+    {% endif %}
+
+    <footer>
+        ML Framework for Polymer Membrane Analysis
+    </footer>
+
+</div>
+
+</body>
+</html>
