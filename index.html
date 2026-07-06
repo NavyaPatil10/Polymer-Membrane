@@ -120,9 +120,7 @@
             border-left:6px solid #16a34a;
         }
 
-        .o2{
-            border-left:6px solid #0284c7;
-        }
+        
 
         .n2{
             border-left:6px solid #f59e0b;
@@ -229,8 +227,8 @@
     <h1>SMILES-Based Gas Permeability Prediction</h1>
 
     <p class="subtitle">
-        Analyze how effectively a polymer membrane can separate gases
-        such as CO₂, O₂, and N₂ using molecular structure information.
+         Predict the CO₂ permeability and CO₂/N₂ selectivity of polymer membranes
+    from their SMILES representation using machine learning.
     </p>
 
     <form action="/predict" method="post">
@@ -283,21 +281,7 @@
 
             </div>
 
-            <div class="box o2">
-
-                <div class="label">
-                    💨 Oxygen Transport
-                </div>
-
-                <div class="desc">
-                    Represents oxygen permeability performance
-                </div>
-
-                <div class="value">
-                    {{ results.O2 }}
-                </div>
-
-            </div>
+           
 
             <div class="box n2">
 
@@ -315,21 +299,7 @@
 
             </div>
 
-            <div class="box ratio">
-
-                <div class="label">
-                    📈 CO₂ vs O₂ Separation
-                </div>
-
-                <div class="desc">
-                    Ability to distinguish CO₂ from oxygen
-                </div>
-
-                <div class="value">
-                    {{ results.CO2_O2 }}
-                </div>
-
-            </div>
+            
 
             <div class="box ratio">
 
