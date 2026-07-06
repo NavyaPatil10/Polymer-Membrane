@@ -1,14 +1,12 @@
 # Polymer-Membrane
 
 ## Overview
-This project predicts the gas separation performance of polymer membranes using Machine Learning. The model estimates CO₂, O₂, and N₂ permeability along with CO₂/N₂ and CO₂/O₂ selectivity from polymer SMILES representations.
+This project predicts the gas separation performance of polymer membranes using Machine Learning. The model estimates CO₂ and N₂ permeability along with CO₂/N₂  selectivity from polymer SMILES representations.
 
 ## Features
 - CO₂ permeability prediction
-- O₂ permeability prediction
 - N₂ permeability prediction
 - CO₂/N₂ selectivity prediction
-- CO₂/O₂ selectivity prediction
 - SMILES-based prediction
 - Flask web interface
 
