@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request
 import numpy as np
 import joblib
-
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -12,8 +11,7 @@ app = Flask(__name__)
 # =========================================
 try:
     model_co2 = joblib.load("final_xgb_CO2.pkl")
-    model_n2  = joblib.load("final_xgb_N2.pkl")
-    model_o2  = joblib.load("final_xgb_O2.pkl")
+    model_n2 = joblib.load("final_xgb_N2.pkl")
 
     print("✅ Models loaded successfully")
 
@@ -23,7 +21,6 @@ except Exception as e:
 
     model_co2 = None
     model_n2 = None
-    model_o2 = None
 
 
 # =========================================
@@ -42,14 +39,13 @@ def smiles_to_ecfp(smiles, n_bits=2048):
         nBits=n_bits
     )
 
-    # Fast conversion
     arr = np.array(fp).reshape(1, -1)
 
     return arr
 
 
 # =========================================
-# ROUTE
+# HOME
 # =========================================
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -64,166 +60,140 @@ def index():
 
         smiles = request.form.get("smiles")
 
-        # =========================================
-        # EMPTY INPUT
-        # =========================================
+        # Empty input
         if not smiles:
 
-            error = "❌ Please enter a SMILES string"
+            error = "Please enter a SMILES string."
 
             return render_template(
                 "index.html",
-                result=result,
                 error=error
             )
 
-        # =========================================
-        # MODEL CHECK
-        # =========================================
-        if model_co2 is None:
+        # Check models
+        if model_co2 is None or model_n2 is None:
 
-            error = "❌ Models not loaded properly"
+            error = "Models not loaded properly."
 
             return render_template(
                 "index.html",
-                result=result,
                 error=error
             )
 
-        # =========================================
-        # CONVERT TO ECFP
-        # =========================================
+        # Convert to fingerprint
         X = smiles_to_ecfp(smiles)
 
-        # =========================================
-        # INVALID SMILES
-        # =========================================
         if X is None:
 
-            error = "❌ Invalid SMILES string"
+            error = "Invalid SMILES string."
 
         else:
 
             try:
 
-                # =========================================
-                # PREDICTIONS
-                # =========================================
-                co2 = float(model_co2.predict(X)[0])
+                # Predictions
+                c# =========================================
+# LOG PREDICTIONS
+# =========================================
+                log_co2 = float(model_co2.predict(X)[0])
+                log_n2 = float(model_n2.predict(X)[0])
 
-                n2 = float(model_n2.predict(X)[0])
+# =========================================
+# CONVERT TO PERMEABILITY (Barrer)
+# =========================================
+                co2 = 10 ** log_co2
+                n2 = 10 ** log_n2
 
-                o2 = float(model_o2.predict(X)[0])
+                if n2 <= 0:
 
-                # =========================================
-                # AVOID DIVISION ERROR
-                # =========================================
-                if n2 == 0 or o2 == 0:
+                    error = "Prediction resulted in invalid N₂ permeability."
 
-                    error = "❌ Division by zero in selectivity"
-
-                    return render_template(
-                        "index.html",
-                        result=result,
-                        error=error
-                    )
-
-                # =========================================
-                # SELECTIVITY
-                # =========================================
-                sel_co2_n2 = co2 / n2
-
-                sel_co2_o2 = co2 / o2
-
-                # =========================================
-                # INTERPRETATION + APPLICATION
-                # =========================================
-
-                # Strong CO2/N2 and strong CO2/O2
-                if sel_co2_n2 >= 30 and sel_co2_o2 >= 10:
-
-                    interpretation = """
-                    The membrane demonstrates excellent carbon dioxide
-                    separation capability against both nitrogen and oxygen
-                    gases, indicating strong potential for advanced carbon
-                    capture and industrial gas separation applications.
-                    """
-
-                    application = """
-                    Carbon Capture • Industrial Gas Separation •
-                    Environmental Protection Systems
-                    """
-
-                # Strong CO2/N2 but moderate CO2/O2
-                elif sel_co2_n2 >= 30 and sel_co2_o2 < 10:
-
-                    interpretation = """
-                    The membrane demonstrates strong carbon dioxide
-                    separation from nitrogen gases, while oxygen
-                    separation performance is comparatively moderate.
-                    This makes the membrane suitable for flue gas
-                    treatment and carbon capture applications.
-                    """
-
-                    application = """
-                    Flue Gas Separation • Carbon Capture •
-                    Industrial CO₂ Recovery
-                    """
-
-                # Moderate performance
-                elif sel_co2_n2 >= 10 or sel_co2_o2 >= 5:
-
-                    interpretation = """
-                    The membrane demonstrates moderate gas separation
-                    characteristics and may be suitable for selective
-                    gas purification applications.
-                    """
-
-                    application = """
-                    Gas Purification • Membrane Filtration •
-                    Industrial Separation Systems
-                    """
-
-                # Low performance
                 else:
 
-                    interpretation = """
-                    The membrane shows lower gas separation efficiency
-                    and may require further optimization for practical
-                    industrial deployment.
-                    """
+    # =========================================
+    # CO₂/N₂ SELECTIVITY
+    # =========================================
+                    selectivity = co2 / n2
 
-                    application = """
-                    Research and Material Optimization
-                    """
+                    # Interpretation
+                    if selectivity >= 30:
 
-                # =========================================
-                # FINAL RESULT
-                # =========================================
-                result = {
+                        interpretation = (
+                            "The polymer membrane exhibits excellent "
+                            "CO₂/N₂ separation performance with high "
+                            "potential for carbon capture applications."
+                        )
 
-                    "co2": round(co2, 6),
+                        application = (
+                            "Carbon Capture • Flue Gas Separation • "
+                            "Industrial CO₂ Recovery"
+                        )
 
-                    "n2": round(n2, 6),
+                    elif selectivity >= 15:
 
-                    "o2": round(o2, 6),
+                        interpretation = (
+                            "The membrane demonstrates good CO₂/N₂ "
+                            "separation performance suitable for several "
+                            "industrial gas separation processes."
+                        )
 
-                    "sel_co2_n2": round(sel_co2_n2, 3),
+                        application = (
+                            "Gas Separation • Industrial Membranes • "
+                            "CO₂ Enrichment"
+                        )
 
-                    "sel_co2_o2": round(sel_co2_o2, 3)
-                }
+                    elif selectivity >= 10:
+
+                        interpretation = (
+                            "The membrane exhibits moderate separation "
+                            "performance and may require optimization "
+                            "for practical deployment."
+                        )
+
+                        application = (
+                            "Membrane Development • Material Optimization"
+                        )
+
+                    else:
+
+                        interpretation = (
+                            "The membrane exhibits relatively low "
+                            "CO₂/N₂ selectivity and may require further "
+                            "material design improvements."
+                        )
+
+                        application = (
+                            "Research and Material Optimization"
+                        )
+
+                    result = {
+
+                        "co2": round(co2, 6),
+
+                        "n2": round(n2, 6),
+
+                        "selectivity": round(selectivity, 3)
+
+                    }
 
             except Exception as e:
 
-                error = f"❌ Prediction error: {str(e)}"
+                error = f"Prediction error: {str(e)}"
 
     return render_template(
+
         "index.html",
+
         result=result,
+
         error=error,
+
         interpretation=interpretation,
+
         application=application,
+
         smiles=smiles
+
     )
 
 
@@ -231,4 +201,5 @@ def index():
 # RUN
 # =========================================
 if __name__ == "__main__":
+
     app.run(debug=True)
