@@ -1,32 +1,26 @@
 from flask import Flask, render_template, request
 import numpy as np
 import joblib
+
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, DataStructs
 
 app = Flask(__name__)
 
-# =========================================
-# LOAD MODELS
-# =========================================
-try:
-    model_co2 = joblib.load("final_xgb_CO2.pkl")
-    model_n2 = joblib.load("final_xgb_N2.pkl")
+# ==========================================
+# Load Trained Models
+# ==========================================
 
-    print("✅ Models loaded successfully")
-
-except Exception as e:
-
-    print("❌ Model loading error:", e)
-
-    model_co2 = None
-    model_n2 = None
+model_co2 = joblib.load("final_xgb_CO2.pkl")
+model_n2 = joblib.load("final_xgb_N2.pkl")
+model_co2_n2 = joblib.load("final_xgb_CO2_N2.pkl")
 
 
-# =========================================
-# SMILES → ECFP
-# =========================================
-def smiles_to_ecfp(smiles, n_bits=2048):
+# ==========================================
+# Fingerprint Function
+# ==========================================
+
+def smiles_to_ecfp(smiles, radius=2, nBits=2048):
 
     mol = Chem.MolFromSmiles(smiles)
 
@@ -35,171 +29,65 @@ def smiles_to_ecfp(smiles, n_bits=2048):
 
     fp = AllChem.GetMorganFingerprintAsBitVect(
         mol,
-        radius=2,
-        nBits=n_bits
+        radius,
+        nBits=nBits
     )
 
-    arr = np.array(fp).reshape(1, -1)
+    arr = np.zeros((nBits,), dtype=np.float32)
 
-    return arr
+    DataStructs.ConvertToNumpyArray(fp, arr)
+
+    return arr.reshape(1, -1)
 
 
-# =========================================
-# HOME
-# =========================================
+# ==========================================
+# Home Page
+# ==========================================
+
 @app.route("/", methods=["GET", "POST"])
-def index():
+def home():
 
-    result = None
+    prediction = None
     error = None
-    interpretation = None
-    application = None
-    smiles = None
 
     if request.method == "POST":
 
-        smiles = request.form.get("smiles")
+        smiles = request.form["smiles"].strip()
 
-        # Empty input
-        if not smiles:
+        fingerprint = smiles_to_ecfp(smiles)
 
-            error = "Please enter a SMILES string."
+        if fingerprint is None:
 
-            return render_template(
-                "index.html",
-                error=error
-            )
-
-        # Check models
-        if model_co2 is None or model_n2 is None:
-
-            error = "Models not loaded properly."
-
-            return render_template(
-                "index.html",
-                error=error
-            )
-
-        # Convert to fingerprint
-        X = smiles_to_ecfp(smiles)
-
-        if X is None:
-
-            error = "Invalid SMILES string."
+            error = "Invalid SMILES! Please enter a valid SMILES."
 
         else:
 
-            try:
+            # Predict log10 values
+            log_co2 = float(model_co2.predict(fingerprint)[0])
+            log_n2 = float(model_n2.predict(fingerprint)[0])
+            log_co2_n2 = float(model_co2_n2.predict(fingerprint)[0])
 
-                # Predictions
-                c# =========================================
-# LOG PREDICTIONS
-# =========================================
-                log_co2 = float(model_co2.predict(X)[0])
-                log_n2 = float(model_n2.predict(X)[0])
+            # Convert back to original values
+            co2 = 10 ** log_co2
+            n2 = 10 ** log_n2
+            co2_n2 = 10 ** log_co2_n2
 
-# =========================================
-# CONVERT TO PERMEABILITY (Barrer)
-# =========================================
-                co2 = 10 ** log_co2
-                n2 = 10 ** log_n2
-
-                if n2 <= 0:
-
-                    error = "Prediction resulted in invalid N₂ permeability."
-
-                else:
-
-    # =========================================
-    # CO₂/N₂ SELECTIVITY
-    # =========================================
-                    selectivity = co2 / n2
-
-                    # Interpretation
-                    if selectivity >= 30:
-
-                        interpretation = (
-                            "The polymer membrane exhibits excellent "
-                            "CO₂/N₂ separation performance with high "
-                            "potential for carbon capture applications."
-                        )
-
-                        application = (
-                            "Carbon Capture • Flue Gas Separation • "
-                            "Industrial CO₂ Recovery"
-                        )
-
-                    elif selectivity >= 15:
-
-                        interpretation = (
-                            "The membrane demonstrates good CO₂/N₂ "
-                            "separation performance suitable for several "
-                            "industrial gas separation processes."
-                        )
-
-                        application = (
-                            "Gas Separation • Industrial Membranes • "
-                            "CO₂ Enrichment"
-                        )
-
-                    elif selectivity >= 10:
-
-                        interpretation = (
-                            "The membrane exhibits moderate separation "
-                            "performance and may require optimization "
-                            "for practical deployment."
-                        )
-
-                        application = (
-                            "Membrane Development • Material Optimization"
-                        )
-
-                    else:
-
-                        interpretation = (
-                            "The membrane exhibits relatively low "
-                            "CO₂/N₂ selectivity and may require further "
-                            "material design improvements."
-                        )
-
-                        application = (
-                            "Research and Material Optimization"
-                        )
-
-                    result = {
-
-                        "co2": round(co2, 6),
-
-                        "n2": round(n2, 6),
-
-                        "selectivity": round(selectivity, 3)
-
-                    }
-
-            except Exception as e:
-
-                error = f"Prediction error: {str(e)}"
+            prediction = {
+                "CO2": round(co2, 3),
+                "N2": round(n2, 3),
+                "CO2_N2": round(co2_n2, 3)
+            }
 
     return render_template(
-
         "index.html",
-
-        result=result,
-
-        error=error,
-
-        interpretation=interpretation,
-
-        application=application,
-
-        smiles=smiles
-
+        prediction=prediction,
+        error=error
     )
 
 
-# =========================================
-# RUN
-# =========================================
-if __name__ == "__main__":
+# ==========================================
+# Run Flask
+# ==========================================
 
+if __name__ == "__main__":
     app.run(debug=True)
