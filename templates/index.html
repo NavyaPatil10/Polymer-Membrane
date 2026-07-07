@@ -1,219 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-    <title>SMILES-Based Gas Permeability Prediction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Polymer Gas Permeability Prediction</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
 
-        body{
-            font-family:'Poppins',sans-serif;
+        *{
             margin:0;
             padding:0;
-            background:#e5e7eb;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{
+
+            background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:30px;
+
         }
 
         .container{
-            max-width:1400px;
-            margin:25px auto;
-            text-align:center;
+
+            width:800px;
+            background:white;
+            border-radius:20px;
+            padding:40px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.3);
+
         }
 
         h1{
-            color:#0b3c5d;
-            font-size:36px;
+
+            text-align:center;
+            color:#0b5ed7;
             margin-bottom:10px;
+
         }
 
-        .subtitle{
-            color:#4b5563;
-            font-size:15px;
-            margin-bottom:25px;
-            line-height:1.5;
+        p{
+
+            text-align:center;
+            color:#666;
+            margin-bottom:30px;
+
         }
 
-        form{
-            display:flex;
-            justify-content:center;
-            gap:15px;
-            margin-bottom:25px;
+        textarea{
+
+            width:100%;
+            height:120px;
+            border:2px solid #ddd;
+            border-radius:12px;
+            padding:15px;
+            font-size:16px;
+            resize:none;
+
         }
 
-        input{
-            width:60%;
-            padding:14px;
-            border-radius:14px;
-            border:none;
-            font-size:15px;
-            box-shadow:0 4px 10px rgba(0,0,0,0.08);
-        }
+        textarea:focus{
 
-        input:focus{
             outline:none;
+            border-color:#0b5ed7;
+
         }
 
         button{
-            padding:14px 24px;
-            border:none;
-            border-radius:14px;
-            background:#0b3c5d;
+
+            width:100%;
+            margin-top:20px;
+            background:#0b5ed7;
             color:white;
-            font-weight:600;
-            font-size:15px;
+            border:none;
+            padding:15px;
+            font-size:18px;
+            border-radius:12px;
             cursor:pointer;
             transition:0.3s;
+
         }
 
         button:hover{
-            transform:scale(1.03);
+
+            background:#084298;
+
         }
 
-        .error{
-            color:red;
-            margin-top:15px;
-            font-weight:600;
+        .result{
+
+            margin-top:35px;
+
+        }
+
+        .cards{
+
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:20px;
+
         }
 
         .card{
-            background:#f9fafb;
-            padding:24px;
-            border-radius:24px;
-            box-shadow:0 12px 35px rgba(0,0,0,0.10);
-            margin-top:25px;
-            text-align:left;
+
+            background:#f8f9fa;
+            border-radius:15px;
+            padding:20px;
+            text-align:center;
+            border:1px solid #ddd;
+
         }
 
-        .card h3{
-            color:#8b5e3c;
-            font-size:24px;
-            margin-bottom:15px;
-        }
+        .card h2{
 
-        .smiles{
-            color:#111827;
-            margin-bottom:20px;
-            font-size:14px;
-        }
+            color:#0b5ed7;
+            margin-bottom:10px;
 
-        .smiles span{
-            color:#0b3c5d;
-            font-weight:600;
-        }
-
-        .grid{
-            display:grid;
-            grid-template-columns:repeat(3,1fr);
-            gap:16px;
-        }
-
-        .box{
-            background:white;
-            border-radius:16px;
-            padding:18px;
-            box-shadow:0 5px 14px rgba(0,0,0,0.06);
-        }
-
-        .co2{
-            border-left:6px solid #16a34a;
-        }
-
-        
-
-        .n2{
-            border-left:6px solid #f59e0b;
-        }
-
-        .ratio{
-            border-left:6px solid #ef4444;
-        }
-
-        .label{
-            font-size:17px;
-            font-weight:600;
-            color:#374151;
-        }
-
-        .desc{
-            margin-top:8px;
-            font-size:13px;
-            color:#6b7280;
-            line-height:1.4;
         }
 
         .value{
-            margin-top:15px;
-            font-size:24px;
+
+            font-size:28px;
             font-weight:700;
-            color:#111827;
+            color:#222;
+
         }
 
-        .info-section{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:16px;
-            margin-top:18px;
-        }
+        .error{
 
-        .interpretation,
-        .application{
-            background:white;
-            padding:18px;
-            border-radius:16px;
-            box-shadow:0 5px 15px rgba(0,0,0,0.06);
-        }
+            margin-top:20px;
+            background:#ffe5e5;
+            color:red;
+            padding:15px;
+            border-radius:10px;
+            text-align:center;
 
-        .interpretation h4,
-        .application h4{
-            color:#0b3c5d;
-            margin-bottom:10px;
-            font-size:18px;
-        }
-
-        .interpretation p,
-        .application p{
-            color:#374151;
-            line-height:1.6;
-            font-size:14px;
         }
 
         footer{
-            margin-top:20px;
-            color:#4b5563;
-            font-size:13px;
+
+            margin-top:30px;
+            text-align:center;
+            color:#777;
+            font-size:14px;
+
         }
 
-        @media(max-width:1000px){
+        @media(max-width:700px){
 
-            .grid{
-                grid-template-columns:1fr 1fr;
-            }
+            .cards{
 
-            .info-section{
                 grid-template-columns:1fr;
-            }
-        }
 
-        @media(max-width:768px){
-
-            .grid{
-                grid-template-columns:1fr;
             }
 
-            form{
-                flex-direction:column;
-                align-items:center;
+            .container{
+
+                width:100%;
+
             }
 
-            input{
-                width:90%;
-            }
-
-            .info-section{
-                grid-template-columns:1fr;
-            }
         }
 
     </style>
@@ -224,132 +179,88 @@
 
 <div class="container">
 
-    <h1>SMILES-Based Gas Permeability Prediction</h1>
+<h1>🧪 Polymer Gas Permeability Prediction</h1>
 
-    <p class="subtitle">
-         Predict the CO₂ permeability and CO₂/N₂ selectivity of polymer membranes
-    from their SMILES representation using machine learning.
-    </p>
+<p>Enter a polymer SMILES string to predict CO₂ permeability, N₂ permeability, and CO₂/N₂ selectivity.</p>
 
-    <form action="/predict" method="post">
+<form method="POST">
 
-        <input
-            type="text"
-            name="smiles"
-            placeholder="Enter Polymer SMILES..."
-            required
-        >
+<textarea
+name="smiles"
+placeholder="Enter SMILES here..."
+required>{{ request.form.smiles if request.method=='POST' else '' }}</textarea>
 
-        <button type="submit">
-            Analyze Membrane
-        </button>
+<button type="submit">
 
-    </form>
+Predict Properties
 
-    {% if error %}
-        <div class="error">
-            {{ error }}
-        </div>
-    {% endif %}
+</button>
 
-    {% if results %}
+</form>
 
-    <div class="card">
+{% if error %}
 
-        <h3>Gas Separation Analysis</h3>
+<div class="error">
 
-        <div class="smiles">
-            Polymer Code:
-            <span>{{ smiles }}</span>
-        </div>
+{{ error }}
 
-        <div class="grid">
+</div>
 
-            <div class="box co2">
+{% endif %}
 
-                <div class="label">
-                    🌍 CO₂ Flow Capacity
-                </div>
+{% if prediction %}
 
-                <div class="desc">
-                    Indicates how easily carbon dioxide passes through membrane
-                </div>
+<div class="result">
 
-                <div class="value">
-                    {{ results.CO2 }}
-                </div>
+<div class="cards">
 
-            </div>
+<div class="card">
 
-           
+<h2>CO₂</h2>
 
-            <div class="box n2">
+<div class="value">
 
-                <div class="label">
-                    🧪 Nitrogen Transport
-                </div>
+{{ prediction.CO2 }}
 
-                <div class="desc">
-                    Shows nitrogen movement through membrane
-                </div>
+</div>
 
-                <div class="value">
-                    {{ results.N2 }}
-                </div>
+</div>
 
-            </div>
+<div class="card">
 
-            
+<h2>N₂</h2>
 
-            <div class="box ratio">
+<div class="value">
 
-                <div class="label">
-                    🛡 CO₂ vs N₂ Separation
-                </div>
+{{ prediction.N2 }}
 
-                <div class="desc">
-                    Ability to separate CO₂ from nitrogen
-                </div>
+</div>
 
-                <div class="value">
-                    {{ results.CO2_N2 }}
-                </div>
+</div>
 
-            </div>
+<div class="card">
 
-        </div>
+<h2>CO₂/N₂</h2>
 
-        <div class="info-section">
+<div class="value">
 
-            <div class="interpretation">
+{{ prediction.CO2_N2 }}
 
-                <h4>📌 Membrane Interpretation</h4>
+</div>
 
-                <p>
-                    {{ interpretation }}
-                </p>
+</div>
 
-            </div>
+</div>
 
-            <div class="application">
+</div>
 
-                <h4>🏭 Potential Applications</h4>
+{% endif %}
 
-                <p>
-                    {{ application }}
-                </p>
+<footer>
 
-            </div>
+ Polymer Membrane Prediction
 
-        </div>
-
-    </div>
-
-    {% endif %}
-
-    <footer>
-        AI-driven Polymer Membrane Analysis Framework
-    </footer>
+</footer>
 
 </div>
 
